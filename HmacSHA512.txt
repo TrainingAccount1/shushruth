@@ -1,0 +1,61 @@
+package main;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Base64;
+
+public class Test {
+	public String buildHmacSignature(String apikey, String req_method, String req_URI)
+			throws UnsupportedEncodingException {
+		String sig = null;
+
+		try {
+			LocalDateTime now = LocalDateTime.now();
+			DateTimeFormatter format = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+			String date = now.format(format);
+			System.out.println("Date"+date);
+			Mac hmacSHA512 = Mac.getInstance("HmacSHA512");
+			SecretKeySpec secret_Key = new SecretKeySpec(Base64.getDecoder().decode(apikey),"HmacSHA512");
+			hmacSHA512.init(secret_Key);
+			String payload = new StringBuilder(req_method).append("\n").append(date).append("\n").append(req_URI).toString();
+			sig = Base64.getEncoder().encodeToString(hmacSHA512.doFinal(payload.getBytes("UTF-8")));
+			/*
+			 * BigInteger hash = new BigInteger(1, digest); result = hash.toString(16); if
+			 * ((result.length() % 2) != 0) { result = "0" + result; }
+			 */
+		} catch (IllegalStateException | InvalidKeyException | NoSuchAlgorithmException ex) {
+			throw new RuntimeException("Problemas calculando HMAC", ex);
+		}
+		return sig;
+	}
+}
+
+
+
+
+
+
+
+package main;
+
+import java.io.UnsupportedEncodingException;
+
+public class Run {
+
+	public static void main(String[] args) throws UnsupportedEncodingException {
+		// TODO Auto-generated method stub
+		Test a= new Test();
+		String method = "GET";
+		String key = "Tsysuser011";
+		String uri = "123456";
+		String res = a.buildHmacSignature(key, method, uri);
+		System.out.println("Hai="+res);
+	}
+
+}
